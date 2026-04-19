@@ -1,6 +1,6 @@
 # SESD Assignment - Todo API
 
-This repository contains a clean Todo REST API built with Express, TypeScript, MongoDB, and Mongoose.
+This repository contains a clean Todo application with a simple React frontend and an Express, TypeScript, MongoDB backend.
 
 The API is designed around a simple use case: managing tasks with title, description, priority, and completion status. It also includes a stats endpoint and deployment support for Vercel, Render, and Railway.
 
@@ -13,6 +13,7 @@ The API is designed around a simple use case: managing tasks with title, descrip
 - Search todos by title or description
 - Get summary statistics
 - Health check route for deployment
+- Simple React frontend served from the same project
 
 ## Tech Stack
 
@@ -25,6 +26,11 @@ The API is designed around a simple use case: managing tasks with title, descrip
 ## Project Structure
 
 ```text
+public/
+├── app.js
+├── index.html
+└── styles.css
+
 src/
 ├── config/
 ├── controllers/
@@ -60,11 +66,13 @@ npm run dev
 
 The server will start at `http://localhost:8080`.
 
+Open that URL in the browser to use the React frontend.
+
 ## API Endpoints
 
 | Method | Route | Description |
 | --- | --- | --- |
-| GET | `/` | API information |
+| GET | `/` | React frontend |
 | GET | `/health` | Health check |
 | GET | `/api/todos` | Get all todos |
 | GET | `/api/todos?completed=true` | Filter by completion status |
@@ -89,6 +97,18 @@ curl -X POST http://localhost:8080/api/todos \
     "completed": false
   }'
 ```
+
+## Frontend
+
+The frontend is a lightweight React interface served by Express. It supports:
+
+- creating todos
+- editing existing todos
+- filtering by status and priority
+- searching by title or description
+- toggling completion
+- deleting todos
+- viewing summary stats
 
 ## Deployment
 
