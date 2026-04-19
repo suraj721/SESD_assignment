@@ -110,34 +110,7 @@ The frontend is a lightweight React interface served by Express. It supports:
 - deleting todos
 - viewing summary stats
 
-## Deployment
 
-### Vercel
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fsuraj721%2FSESD_assignment&project-name=sesd-assignment&repository-name=sesd-assignment&env=MONGODB_URI&envDescription=MongoDB%20connection%20string%20for%20the%20Todo%20API)
-
-Set this environment variable before deploying:
-
-```env
-MONGODB_URI=<your-mongodb-atlas-connection-string>
-```
-
-### Render
-
-- Build command: `npm install && npm run build`
-- Start command: `npm start`
-- Environment variables:
-
-```env
-MONGODB_URI=<your-mongodb-atlas-connection-string>
-PORT=10000
-```
-
-### Railway
-
-- Import the repository
-- Add `MONGODB_URI`
-- Deploy
 
 ## Author
 
