@@ -11,7 +11,10 @@ export const connectDatabase = async () => {
   }
 
   if (!databaseConnectionPromise) {
-    databaseConnectionPromise = connect(uri);
+    databaseConnectionPromise = connect(uri).catch((error) => {
+      databaseConnectionPromise = null;
+      throw error;
+    });
   }
 
   await databaseConnectionPromise;
