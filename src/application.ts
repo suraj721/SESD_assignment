@@ -23,11 +23,7 @@ export const createApp = () => {
 
   app.use("/api", apiRouter);
 
-  app.get("*", (req, res, next) => {
-    if (req.path.startsWith("/api")) {
-      return next();
-    }
-
+  app.get(/^(?!\/api).*/, (req, res) => {
     return res.sendFile(path.join(publicPath, "index.html"));
   });
 
