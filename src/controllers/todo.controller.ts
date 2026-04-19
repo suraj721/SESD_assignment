@@ -1,25 +1,45 @@
 import { Request, Response } from "express";
+import { isValidObjectId } from "mongoose";
 import TodoModel from "../models/todo.model";
 
+type TodoFilterQuery = {
+  status?: boolean;
+  title?: { $regex: string; $options: string };
+};
+
+const parseStatusFilter = (value: unknown) => {
+  if (value === undefined) {
+    return { isValid: true as const };
+  }
+
+  if (value === "true" || value === "false") {
+    return { isValid: true as const, value: value === "true" };
+  }
+
+  return { isValid: false as const };
+};
+
+const isNonEmptyString = (value: unknown): value is string =>
+  typeof value === "string" && value.trim().length > 0;
+
 class TodoController {
-  public getTodos = async (req: Request, res: Response) => {
+  public listTodos = async (req: Request, res: Response) => {
     try {
       const { status, search, sort = "desc" } = req.query;
-      const query: {
-        status?: boolean;
-        title?: { $regex: string; $options: string };
-      } = {};
+      const query: TodoFilterQuery = {};
+      const statusFilter = parseStatusFilter(status);
 
-      if (status !== undefined) {
-        if (status !== "true" && status !== "false") {
-          return res
-            .status(400)
-            .json({ message: "status query must be true or false" });
-        }
-        query.status = status === "true";
+      if (!statusFilter.isValid) {
+        return res
+          .status(400)
+          .json({ message: "status query must be true or false" });
       }
 
-      if (typeof search === "string" && search.trim()) {
+      if (statusFilter.value !== undefined) {
+        query.status = statusFilter.value;
+      }
+
+      if (isNonEmptyString(search)) {
         query.title = { $regex: search.trim(), $options: "i" };
       }
 
@@ -30,7 +50,7 @@ class TodoController {
         total: todos.length,
         filters: {
           status: query.status ?? "all",
-          search: typeof search === "string" ? search : "",
+          search: isNonEmptyString(search) ? search.trim() : "",
           sort: sort === "asc" ? "asc" : "desc",
         },
         data: todos,
@@ -41,8 +61,12 @@ class TodoController {
     }
   };
 
-  public getTodoById = async (req: Request, res: Response) => {
+  public getTodo = async (req: Request, res: Response) => {
     try {
+      if (!isValidObjectId(req.params.id)) {
+        return res.status(400).json({ message: "Invalid todo id" });
+      }
+
       const todo = await TodoModel.findById(req.params.id);
 
       if (!todo) {
@@ -56,11 +80,11 @@ class TodoController {
     }
   };
 
-  public postTodos = async (req: Request, res: Response) => {
+  public createTodo = async (req: Request, res: Response) => {
     try {
       const { title, status } = req.body;
 
-      if (!title || typeof title !== "string") {
+      if (!isNonEmptyString(title)) {
         return res
           .status(400)
           .json({ message: "title is required and must be a string" });
@@ -83,11 +107,15 @@ class TodoController {
 
   public updateTodo = async (req: Request, res: Response) => {
     try {
+      if (!isValidObjectId(req.params.id)) {
+        return res.status(400).json({ message: "Invalid todo id" });
+      }
+
       const { title, status } = req.body;
       const updatePayload: Partial<{ title: string; status: boolean }> = {};
 
       if (title !== undefined) {
-        if (typeof title !== "string" || !title.trim()) {
+        if (!isNonEmptyString(title)) {
           return res
             .status(400)
             .json({ message: "title must be a non-empty string" });
@@ -121,6 +149,10 @@ class TodoController {
 
   public toggleTodoStatus = async (req: Request, res: Response) => {
     try {
+      if (!isValidObjectId(req.params.id)) {
+        return res.status(400).json({ message: "Invalid todo id" });
+      }
+
       const todo = await TodoModel.findById(req.params.id);
 
       if (!todo) {
@@ -139,6 +171,10 @@ class TodoController {
 
   public deleteTodo = async (req: Request, res: Response) => {
     try {
+      if (!isValidObjectId(req.params.id)) {
+        return res.status(400).json({ message: "Invalid todo id" });
+      }
+
       const deletedTodo = await TodoModel.findByIdAndDelete(req.params.id);
 
       if (!deletedTodo) {
@@ -152,7 +188,7 @@ class TodoController {
     }
   };
 
-  public getTodoStats = async (_req: Request, res: Response) => {
+  public getStats = async (_req: Request, res: Response) => {
     try {
       const [total, completed, pending] = await Promise.all([
         TodoModel.countDocuments(),

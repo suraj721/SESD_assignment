@@ -5,17 +5,17 @@ import TodoController from "../controllers/todo.controller";
 class TodoRoutes implements Routes {
   path?: string = "/todo";
   router: Router = Router();
-  public todoController = new TodoController();
+  private todoController = new TodoController();
 
   constructor() {
     this.initializeRoutes();
   }
 
   private initializeRoutes() {
-    this.router.get(`${this.path}/stats`, this.todoController.getTodoStats);
-    this.router.get(`${this.path}/allTodos`, this.todoController.getTodos);
-    this.router.get(`${this.path}/:id`, this.todoController.getTodoById);
-    this.router.post(`${this.path}/add`, this.todoController.postTodos);
+    this.router.get(`${this.path}/stats`, this.todoController.getStats);
+    this.router.get(`${this.path}/allTodos`, this.todoController.listTodos);
+    this.router.get(`${this.path}/:id`, this.todoController.getTodo);
+    this.router.post(`${this.path}/add`, this.todoController.createTodo);
     this.router.put(`${this.path}/:id`, this.todoController.updateTodo);
     this.router.patch(
       `${this.path}/:id/toggle`,

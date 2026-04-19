@@ -1,189 +1,136 @@
-# SESD Assignment: Todo API
+# SESD Assignment - Todo API
 
-A RESTful Todo API built with **Express.js**, **TypeScript**, and **MongoDB**.
+This is a simple Todo REST API built with Express, TypeScript, MongoDB, and Mongoose.
 
-This submission has been prepared by **Suraj Kumar Rai**.
+The project supports creating, updating, deleting, and listing todos, along with a small stats endpoint for summary information.
 
-## What is new
+## Features
 
-- Full CRUD support for todos
-- New `GET /todo/stats` endpoint for summary metrics
-- Filtering and search support on `GET /todo/allTodos`
-- `PATCH /todo/:id/toggle` endpoint for quick status updates
-- Deployment-ready scripts with `build` and `start`
-- Root and health endpoints for easier cloud deployment checks
+- Create, read, update, and delete todos
+- Toggle todo status
+- Filter todos by completion status
+- Search todos by title
+- View todo statistics
+- Health check endpoint for deployment
 
 ## Tech Stack
 
 - Node.js
-- Express.js
+- Express
 - TypeScript
-- MongoDB with Mongoose
+- MongoDB
+- Mongoose
 
-## Project Structure
+## Run Locally
 
-```text
-src/
-├── app.ts
-├── server.ts
-├── controllers/
-├── models/
-├── routes/
-└── utils/
-```
-
-## Local Setup
-
-### 1. Install dependencies
+1. Install dependencies:
 
 ```bash
 npm install
 ```
 
-### 2. Configure environment variables
-
-Create a `.env` file in the project root:
+2. Create a `.env` file using `.env.example`:
 
 ```env
 MONGODB_URI=mongodb://localhost:27017/todo_db
 PORT=8080
 ```
 
-### 3. Run in development
+3. Start the development server:
 
 ```bash
 npm run dev
 ```
 
-The API will run at `http://localhost:8080`.
+The API will be available at `http://localhost:8080`.
 
-## Production Run
-
-Build the TypeScript project:
+## Build for Production
 
 ```bash
 npm run build
-```
-
-Start the compiled server:
-
-```bash
 npm start
 ```
 
-## API Endpoints
+## API Routes
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/` | API info and quick links |
-| GET | `/health` | Health check endpoint |
-| GET | `/todo/allTodos` | Get all todos |
-| GET | `/todo/allTodos?status=true` | Filter by completion status |
-| GET | `/todo/allTodos?search=read` | Search todos by title |
+| Method | Route | Description |
+| --- | --- | --- |
+| GET | `/` | Basic API info |
+| GET | `/health` | Health check |
+| GET | `/todo/allTodos` | List all todos |
+| GET | `/todo/allTodos?status=true` | Filter completed todos |
+| GET | `/todo/allTodos?search=book` | Search todos by title |
 | GET | `/todo/stats` | Get todo statistics |
 | GET | `/todo/:id` | Get a single todo |
 | POST | `/todo/add` | Create a todo |
 | PUT | `/todo/:id` | Update a todo |
-| PATCH | `/todo/:id/toggle` | Toggle completion status |
+| PATCH | `/todo/:id/toggle` | Toggle todo status |
 | DELETE | `/todo/:id` | Delete a todo |
 
 ## Sample Requests
 
-### Create a todo
+Create a todo:
 
 ```bash
 curl -X POST http://localhost:8080/todo/add \
   -H "Content-Type: application/json" \
-  -d '{"title":"Prepare SESD submission","status":false}'
+  -d '{"title":"Finish SESD assignment","status":false}'
 ```
 
-### Get all todos with search
+List todos:
 
 ```bash
-curl "http://localhost:8080/todo/allTodos?search=submission&sort=desc"
+curl http://localhost:8080/todo/allTodos
 ```
 
-### Toggle a todo
-
-```bash
-curl -X PATCH http://localhost:8080/todo/<id>/toggle
-```
-
-### Get statistics
+Get stats:
 
 ```bash
 curl http://localhost:8080/todo/stats
 ```
 
-## Deployment Guide
+## Deployment
 
-### Option 1: Vercel
+### Vercel
 
-This project now includes:
+One-click deploy:
 
-- `api/index.ts` as the Vercel serverless entrypoint
-- `vercel.json` to route requests through the Vercel function
-- MongoDB connection reuse logic for serverless deployments
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fsuraj721%2FSESD_assignment&project-name=sesd-assignment&repository-name=SESD_assignment&env=MONGODB_URI&envDescription=MongoDB%20Atlas%20connection%20string%20for%20the%20Todo%20API&envLink=https%3A%2F%2Fgithub.com%2Fsuraj721%2FSESD_assignment%23deployment)
 
-Steps:
+Manual steps:
 
-1. Push this repository to GitHub.
-2. Create a free database on [MongoDB Atlas](https://www.mongodb.com/atlas/database).
-3. In Atlas, copy your application connection string and replace the username, password, and database name placeholders.
-4. Open [Vercel](https://vercel.com/) and import the GitHub repository.
-5. During project setup, keep the detected Node.js project settings.
-6. Add the environment variable:
+1. Create a free cluster on [MongoDB Atlas](https://www.mongodb.com/atlas/database).
+2. Copy the application connection string and replace the username, password, and database name placeholders.
+3. Import this repository into [Vercel](https://vercel.com/).
+4. Add `MONGODB_URI` in the project environment variables.
+5. Redeploy after saving the variable.
 
-```text
-MONGODB_URI=<your-mongodb-atlas-connection-string>
-```
+### Render
 
-7. Deploy the project.
-8. After deployment, test:
-
-```text
-https://your-project.vercel.app/
-https://your-project.vercel.app/health
-https://your-project.vercel.app/todo/allTodos
-https://your-project.vercel.app/todo/stats
-```
-
-### Option 2: Render
-
-1. Push this project to your GitHub repository.
-2. Create a free MongoDB database on [MongoDB Atlas](https://www.mongodb.com/atlas/database).
-3. In Render, create a new `Web Service` from the GitHub repo.
-4. Use these settings:
+1. Create a MongoDB Atlas cluster.
+2. Create a new Web Service on [Render](https://render.com/).
+3. Connect this GitHub repository.
+4. Use:
 
 ```text
 Build Command: npm install && npm run build
 Start Command: npm start
 ```
 
-5. Add environment variables in Render:
+5. Add:
 
 ```text
-MONGODB_URI=<your-mongodb-atlas-connection-string>
+MONGODB_URI=<your-atlas-connection-string>
 PORT=10000
 ```
 
-6. Deploy the service.
+### Railway
 
-### Option 3: Railway
-
-1. Open [Railway](https://railway.app/).
-2. Deploy the GitHub repository.
+1. Create a MongoDB Atlas cluster.
+2. Import the repository into [Railway](https://railway.app/).
 3. Add `MONGODB_URI` as an environment variable.
-4. Railway usually provides `PORT` automatically, and this project already supports that.
-5. Run the deployment.
-
-## Submission Notes
-
-- Repository owner: `suraj721`
-- Project author inside code: **Suraj Kumar Rai**
-- Package author field: **Suraj Kumar Rai**
-- README author credit: **Suraj Kumar Rai**
+4. Deploy the service.
 
 ## Author
 
-**Suraj Kumar Rai**
+Suraj Kumar Rai

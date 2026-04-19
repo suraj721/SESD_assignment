@@ -25,10 +25,14 @@ export const createApp = (routes: Routes[]) => {
 
   app.use(express.json());
 
+  app.get("/favicon.ico", (_req, res) => {
+    res.status(204).end();
+  });
+
   app.get("/", (_req, res) => {
     res.status(200).json({
-      message: "Todo API is running",
-      author: "Suraj Kumar Rai",
+      name: "Todo API",
+      message: "API is running",
       endpoints: {
         health: "/health",
         todos: "/todo/allTodos",
@@ -43,6 +47,10 @@ export const createApp = (routes: Routes[]) => {
 
   routes.forEach((route) => {
     app.use("/", route.router);
+  });
+
+  app.use((_req, res) => {
+    res.status(404).json({ message: "Route not found" });
   });
 
   return app;
