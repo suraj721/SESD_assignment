@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { createApp, connectDatabase } from "../src/app";
+import { createApp, connectDatabase } from "../src/application";
 import TodoRoutes from "../src/routes/todo.routes";
 
 const app = createApp([new TodoRoutes()]);
