@@ -1,12 +1,11 @@
 import express from "express";
 import { createApp, connectDatabase } from "../src/application";
-import TodoRoutes from "../src/routes/todo.routes";
 
 const app = express();
 
 app.use(async (req, res, next) => {
   try {
-    if (req.path.startsWith("/todo")) {
+    if (req.path.startsWith("/api/todos")) {
       await connectDatabase();
     }
     next();
@@ -23,6 +22,6 @@ app.use(async (req, res, next) => {
   }
 });
 
-app.use(createApp([new TodoRoutes()]));
+app.use(createApp());
 
 export default app;

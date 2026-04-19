@@ -1,5 +1,4 @@
-import { model, Schema } from "mongoose";
-import { TodoDocument, TodoModelInterface } from "../utils/todo.interface";
+import { InferSchemaType, Schema, model } from "mongoose";
 
 const todoSchema = new Schema(
   {
@@ -7,10 +6,23 @@ const todoSchema = new Schema(
       type: String,
       required: true,
       trim: true,
+      minlength: 1,
+      maxlength: 120,
     },
-    status: {
+    description: {
+      type: String,
+      trim: true,
+      maxlength: 500,
+      default: "",
+    },
+    completed: {
       type: Boolean,
       default: false,
+    },
+    priority: {
+      type: String,
+      enum: ["low", "medium", "high"],
+      default: "medium",
     },
   },
   {
@@ -18,6 +30,6 @@ const todoSchema = new Schema(
   }
 );
 
-const TodoModel = model<TodoDocument, TodoModelInterface>("Todo", todoSchema);
+export type Todo = InferSchemaType<typeof todoSchema>;
 
-export default TodoModel;
+export const TodoModel = model<Todo>("Todo", todoSchema);

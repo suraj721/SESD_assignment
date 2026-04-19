@@ -1,212 +1,121 @@
 import { Request, Response } from "express";
-import { isValidObjectId } from "mongoose";
-import TodoModel from "../models/todo.model";
+import { todoService } from "../services/todo.service";
 
-type TodoFilterQuery = {
-  status?: boolean;
-  title?: { $regex: string; $options: string };
+const sendBadRequest = (res: Response, error: unknown) => {
+  const message = error instanceof Error ? error.message : "Invalid request";
+  return res.status(400).json({ message });
 };
 
-const parseStatusFilter = (value: unknown) => {
-  if (value === undefined) {
-    return { isValid: true as const };
-  }
+const getRouteId = (value: string | string[]) =>
+  Array.isArray(value) ? value[0] : value;
 
-  if (value === "true" || value === "false") {
-    return { isValid: true as const, value: value === "true" };
-  }
-
-  return { isValid: false as const };
-};
-
-const isNonEmptyString = (value: unknown): value is string =>
-  typeof value === "string" && value.trim().length > 0;
-
-class TodoController {
-  public listTodos = async (req: Request, res: Response) => {
+export const todoController = {
+  async listTodos(req: Request, res: Response) {
     try {
-      const { status, search, sort = "desc" } = req.query;
-      const query: TodoFilterQuery = {};
-      const statusFilter = parseStatusFilter(status);
+      const { completed, search, priority, sort } = req.query;
 
-      if (!statusFilter.isValid) {
+      if (
+        completed !== undefined &&
+        completed !== "true" &&
+        completed !== "false"
+      ) {
         return res
           .status(400)
-          .json({ message: "status query must be true or false" });
+          .json({ message: "completed query must be true or false" });
       }
 
-      if (statusFilter.value !== undefined) {
-        query.status = statusFilter.value;
-      }
-
-      if (isNonEmptyString(search)) {
-        query.title = { $regex: search.trim(), $options: "i" };
-      }
-
-      const sortDirection = sort === "asc" ? 1 : -1;
-      const todos = await TodoModel.find(query).sort({ createdAt: sortDirection });
+      const todos = await todoService.list({
+        completed: completed === undefined ? undefined : completed === "true",
+        search: typeof search === "string" ? search.trim() : undefined,
+        priority:
+          priority === "low" || priority === "medium" || priority === "high"
+            ? priority
+            : undefined,
+        sort: sort === "asc" ? "asc" : "desc",
+      });
 
       return res.status(200).json({
-        total: todos.length,
-        filters: {
-          status: query.status ?? "all",
-          search: isNonEmptyString(search) ? search.trim() : "",
-          sort: sort === "asc" ? "asc" : "desc",
-        },
+        count: todos.length,
         data: todos,
       });
-    } catch (err) {
-      console.error(err);
+    } catch (error) {
+      console.error(error);
       return res.status(500).json({ message: "Failed to fetch todos" });
     }
-  };
+  },
 
-  public getTodo = async (req: Request, res: Response) => {
+  async getTodo(req: Request, res: Response) {
     try {
-      if (!isValidObjectId(req.params.id)) {
-        return res.status(400).json({ message: "Invalid todo id" });
-      }
-
-      const todo = await TodoModel.findById(req.params.id);
+      const todo = await todoService.getById(getRouteId(req.params.id));
 
       if (!todo) {
         return res.status(404).json({ message: "Todo not found" });
       }
 
       return res.status(200).json(todo);
-    } catch (err) {
-      console.error(err);
-      return res.status(400).json({ message: "Invalid todo id" });
+    } catch (error) {
+      return sendBadRequest(res, error);
     }
-  };
+  },
 
-  public createTodo = async (req: Request, res: Response) => {
+  async createTodo(req: Request, res: Response) {
     try {
-      const { title, status } = req.body;
-
-      if (!isNonEmptyString(title)) {
-        return res
-          .status(400)
-          .json({ message: "title is required and must be a string" });
-      }
-
-      if (status !== undefined && typeof status !== "boolean") {
-        return res.status(400).json({ message: "status must be a boolean" });
-      }
-
-      const todo = await TodoModel.create({
-        title: title.trim(),
-        status,
-      });
+      const todo = await todoService.create(req.body);
       return res.status(201).json(todo);
-    } catch (err) {
-      console.error(err);
-      return res.status(500).json({ message: "Failed to create todo" });
+    } catch (error) {
+      return sendBadRequest(res, error);
     }
-  };
+  },
 
-  public updateTodo = async (req: Request, res: Response) => {
+  async updateTodo(req: Request, res: Response) {
     try {
-      if (!isValidObjectId(req.params.id)) {
-        return res.status(400).json({ message: "Invalid todo id" });
-      }
-
-      const { title, status } = req.body;
-      const updatePayload: Partial<{ title: string; status: boolean }> = {};
-
-      if (title !== undefined) {
-        if (!isNonEmptyString(title)) {
-          return res
-            .status(400)
-            .json({ message: "title must be a non-empty string" });
-        }
-        updatePayload.title = title.trim();
-      }
-
-      if (status !== undefined) {
-        if (typeof status !== "boolean") {
-          return res.status(400).json({ message: "status must be a boolean" });
-        }
-        updatePayload.status = status;
-      }
-
-      const updatedTodo = await TodoModel.findByIdAndUpdate(
-        req.params.id,
-        updatePayload,
-        { new: true, runValidators: true }
-      );
-
-      if (!updatedTodo) {
-        return res.status(404).json({ message: "Todo not found" });
-      }
-
-      return res.status(200).json(updatedTodo);
-    } catch (err) {
-      console.error(err);
-      return res.status(400).json({ message: "Failed to update todo" });
-    }
-  };
-
-  public toggleTodoStatus = async (req: Request, res: Response) => {
-    try {
-      if (!isValidObjectId(req.params.id)) {
-        return res.status(400).json({ message: "Invalid todo id" });
-      }
-
-      const todo = await TodoModel.findById(req.params.id);
+      const todo = await todoService.update(getRouteId(req.params.id), req.body);
 
       if (!todo) {
         return res.status(404).json({ message: "Todo not found" });
       }
 
-      todo.status = !todo.status;
-      await todo.save();
-
       return res.status(200).json(todo);
-    } catch (err) {
-      console.error(err);
-      return res.status(400).json({ message: "Failed to toggle todo status" });
+    } catch (error) {
+      return sendBadRequest(res, error);
     }
-  };
+  },
 
-  public deleteTodo = async (req: Request, res: Response) => {
+  async toggleTodo(req: Request, res: Response) {
     try {
-      if (!isValidObjectId(req.params.id)) {
-        return res.status(400).json({ message: "Invalid todo id" });
+      const todo = await todoService.toggle(getRouteId(req.params.id));
+
+      if (!todo) {
+        return res.status(404).json({ message: "Todo not found" });
       }
 
-      const deletedTodo = await TodoModel.findByIdAndDelete(req.params.id);
+      return res.status(200).json(todo);
+    } catch (error) {
+      return sendBadRequest(res, error);
+    }
+  },
 
-      if (!deletedTodo) {
+  async deleteTodo(req: Request, res: Response) {
+    try {
+      const todo = await todoService.remove(getRouteId(req.params.id));
+
+      if (!todo) {
         return res.status(404).json({ message: "Todo not found" });
       }
 
       return res.status(200).json({ message: "Todo deleted successfully" });
-    } catch (err) {
-      console.error(err);
-      return res.status(400).json({ message: "Failed to delete todo" });
+    } catch (error) {
+      return sendBadRequest(res, error);
     }
-  };
+  },
 
-  public getStats = async (_req: Request, res: Response) => {
+  async getStats(_req: Request, res: Response) {
     try {
-      const [total, completed, pending] = await Promise.all([
-        TodoModel.countDocuments(),
-        TodoModel.countDocuments({ status: true }),
-        TodoModel.countDocuments({ status: false }),
-      ]);
-
-      return res.status(200).json({
-        total,
-        completed,
-        pending,
-        completionRate: total === 0 ? 0 : Number(((completed / total) * 100).toFixed(2)),
-      });
-    } catch (err) {
-      console.error(err);
-      return res.status(500).json({ message: "Failed to fetch todo stats" });
+      const stats = await todoService.getStats();
+      return res.status(200).json(stats);
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: "Failed to fetch stats" });
     }
-  };
-}
-
-export default TodoController;
+  },
+};

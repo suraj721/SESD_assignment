@@ -1,7 +1,7 @@
 {
-  "name": "workshop",
+  "name": "sesd-assignment-todo-api",
   "version": "1.0.0",
-  "description": "Workshop project built by Suraj Kumar Rai",
+  "description": "A clean Todo REST API built with Express, TypeScript, and MongoDB",
   "main": "dist/server.js",
   "scripts": {
     "build": "tsc",
@@ -9,7 +9,13 @@
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "test": "echo \"No automated tests configured yet\""
   },
-  "keywords": [],
+  "keywords": [
+    "todo",
+    "express",
+    "typescript",
+    "mongodb",
+    "api"
+  ],
   "author": "Suraj Kumar Rai",
   "license": "ISC",
   "type": "commonjs",
