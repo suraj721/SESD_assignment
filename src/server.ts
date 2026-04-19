@@ -1,6 +1,5 @@
-import App from "./app";
+import { startServer } from "./app";
 import TodoRoutes from "./routes/todo.routes";
 import "dotenv/config";
 
-const app = new App([new TodoRoutes()]);
-app.startServer();
+startServer([new TodoRoutes()]);

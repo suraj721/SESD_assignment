@@ -117,7 +117,38 @@ curl http://localhost:8080/todo/stats
 
 ## Deployment Guide
 
-### Option 1: Render
+### Option 1: Vercel
+
+This project now includes:
+
+- `api/index.ts` as the Vercel serverless entrypoint
+- `vercel.json` to route requests through the Vercel function
+- MongoDB connection reuse logic for serverless deployments
+
+Steps:
+
+1. Push this repository to GitHub.
+2. Create a free database on [MongoDB Atlas](https://www.mongodb.com/atlas/database).
+3. In Atlas, copy your application connection string and replace the username, password, and database name placeholders.
+4. Open [Vercel](https://vercel.com/) and import the GitHub repository.
+5. During project setup, keep the detected Node.js project settings.
+6. Add the environment variable:
+
+```text
+MONGODB_URI=<your-mongodb-atlas-connection-string>
+```
+
+7. Deploy the project.
+8. After deployment, test:
+
+```text
+https://your-project.vercel.app/
+https://your-project.vercel.app/health
+https://your-project.vercel.app/todo/allTodos
+https://your-project.vercel.app/todo/stats
+```
+
+### Option 2: Render
 
 1. Push this project to your GitHub repository.
 2. Create a free MongoDB database on [MongoDB Atlas](https://www.mongodb.com/atlas/database).
@@ -138,7 +169,7 @@ PORT=10000
 
 6. Deploy the service.
 
-### Option 2: Railway
+### Option 3: Railway
 
 1. Open [Railway](https://railway.app/).
 2. Deploy the GitHub repository.

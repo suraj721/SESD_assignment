@@ -2,66 +2,60 @@ import express from "express";
 import { Routes } from "./utils/route.Interface";
 import { connect } from "mongoose";
 
-class App {
-  public app: express.Application;
-  public port: string | number;
+let databaseConnectionPromise: Promise<typeof import("mongoose")> | null = null;
 
-  constructor(routes: Routes[]) {
-    this.app = express();
-    this.port = process.env.PORT || 8080;
-    this.initializeMiddlewares();
-    this.initializeSystemRoutes();
-    this.initializeRoutes(routes);
-    this.connectDatabase();
+export const connectDatabase = async () => {
+  const uri = process.env.MONGODB_URI;
+  if (!uri) {
+    throw new Error("MONGODB_URI is missing in environment variables");
   }
 
-  public startServer() {
-    this.app.listen(this.port, () => {
-      console.log(`Server listening on http://localhost:${this.port}`);
+  if (!databaseConnectionPromise) {
+    databaseConnectionPromise = connect(uri);
+  }
+
+  await databaseConnectionPromise;
+};
+
+export const createApp = (routes: Routes[]) => {
+  const app = express();
+
+  app.use(express.json());
+
+  app.get("/", (_req, res) => {
+    res.status(200).json({
+      message: "Todo API is running",
+      author: "Suraj Kumar Rai",
+      endpoints: {
+        health: "/health",
+        todos: "/todo/allTodos",
+        stats: "/todo/stats",
+      },
     });
-  }
+  });
 
-  private initializeRoutes(routes: Routes[]) {
-    routes.forEach((route) => {
-      this.app.use("/", route.router);
+  app.get("/health", (_req, res) => {
+    res.status(200).json({ status: "ok" });
+  });
+
+  routes.forEach((route) => {
+    app.use("/", route.router);
+  });
+
+  return app;
+};
+
+export const startServer = async (routes: Routes[]) => {
+  const app = createApp(routes);
+  const port = process.env.PORT || 8080;
+
+  try {
+    await connectDatabase();
+    app.listen(port, () => {
+      console.log(`Server listening on http://localhost:${port}`);
     });
+  } catch (err) {
+    console.error(err);
+    process.exit(1);
   }
-
-  private initializeMiddlewares() {
-    this.app.use(express.json());
-  }
-
-  private initializeSystemRoutes() {
-    this.app.get("/", (_req, res) => {
-      res.status(200).json({
-        message: "Todo API is running",
-        author: "Suraj Kumar Rai",
-        endpoints: {
-          health: "/health",
-          todos: "/todo/allTodos",
-          stats: "/todo/stats",
-        },
-      });
-    });
-
-    this.app.get("/health", (_req, res) => {
-      res.status(200).json({ status: "ok" });
-    });
-  }
-
-  private async connectDatabase() {
-    const uri = process.env.MONGODB_URI;
-    if (!uri) {
-      throw new Error("MONGODB_URI is missing in environment variables");
-    }
-    try {
-      await connect(uri);
-      console.log("Database connected...");
-    } catch (err) {
-      console.error(err);
-      process.exit(1);
-    }
-  }
-}
-
-export default App;
+};
