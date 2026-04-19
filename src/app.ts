@@ -8,8 +8,9 @@ class App {
 
   constructor(routes: Routes[]) {
     this.app = express();
-    this.port = 8080;
+    this.port = process.env.PORT || 8080;
     this.initializeMiddlewares();
+    this.initializeSystemRoutes();
     this.initializeRoutes(routes);
     this.connectDatabase();
   }
@@ -28,6 +29,24 @@ class App {
 
   private initializeMiddlewares() {
     this.app.use(express.json());
+  }
+
+  private initializeSystemRoutes() {
+    this.app.get("/", (_req, res) => {
+      res.status(200).json({
+        message: "Todo API is running",
+        author: "Suraj Kumar Rai",
+        endpoints: {
+          health: "/health",
+          todos: "/todo/allTodos",
+          stats: "/todo/stats",
+        },
+      });
+    });
+
+    this.app.get("/health", (_req, res) => {
+      res.status(200).json({ status: "ok" });
+    });
   }
 
   private async connectDatabase() {
